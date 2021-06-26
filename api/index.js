@@ -2,11 +2,21 @@ const express = require('express');
 const morgan = require ('morgan')
 const app = express();
 const axios = require ('axios').default;
+const cors = require('cors') //sistema de seguridad 
+const Sequelize = require ('sequelize')
 
- 
+const db = new Sequelize('postgres://postgres:example@localhost:5432/henryblog')
+
+const User = db.define('user', {
+  name: {
+    type: Sequelize.STRING
+  }
+})
+
+ app.use(cors())
+ app.use(express.json());
 app.use(morgan('dev'))
 
-// app.use(express.json());
 
 const users = [
     {
@@ -35,9 +45,14 @@ const users = [
 ]
 
 app.get('/users', (req, res) => {
+  let remoteUsers;
 axios.get('https://jsonplaceholder.typicode.com/users')
 .then(response => { 
-    res.json([...response.data, ...users])
+  remoteUsers = response.data
+   return User.findAll()
+})
+.then(users => {
+return res.json([...remoteUsers, ...users])
 })
 .catch(error => res.status(500).json({error: 'error'}))
 })
@@ -48,13 +63,26 @@ try {
     res.json(response.data)
 } catch(error) {
         if(error.response?.status === 404) { //me ahorro un if 
-        const user = users.find(user => user.id == parseInt(req.params.id)) //parse int lo busca como nro // o uso == y listo lo parsea solo
-        if(user) return res.json(user)
-        return res.sendStatus(404)
+          User.findByPk(req.params.id).then(user =>{ //BUSCO POR EL ID
+            if(user) return res.json(user)
+            return res.sendStatus(404)
+          })
+    } else {
+      res.status(500).json({error: 'error'})
     }
-    res.status(500).json({error: 'error'})
 }
     })
     
-
-app.listen(3001, () => {console.log('Servidor corriendo en puerto 3001')})
+db.sync({force: true}).then(() =>{
+  app.listen(3001, () => {
+    console.log('Servidor corriendo en puerto 3001')
+  })
+  User.create({
+    id:99,
+    name: 'Lucas Di Caro'
+  })
+  User.create({
+    id:100,
+    name: 'Juan Kaunitz'
+  })
+})

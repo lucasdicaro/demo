@@ -1,25 +1,32 @@
-import {applyMiddleware, createStore} from 'redux'
-import thunk from 'redux-thunk'
-import { SET_USERS } from "./actionsNames"
+import { applyMiddleware, createStore } from "redux";
+import thunk from "redux-thunk"; // para tener acciones asincronas
+import { SET_USERS, SET_USER_DETAIL } from "./actionsNames";
 
 const initialState = {
-    users: undefined,
-}
+  users: undefined,
+  userDetail: undefined,
+};
 
 function reducer(state = initialState, action) {
-switch(action.type) {
- case SET_USERS: {
-return {
-    ...state,
-    users: action.payload,
+  switch (action.type) {
+    case SET_USERS: {
+      return {
+        ...state,
+        users: action.payload,
+      };
+    }
+    case SET_USER_DETAIL: {
+      return {
+        ...state,
+        userDetail: action.payload,
+      };
+    }
+    default: {
+      return state;
+    }
+  }
 }
- }
- default: {
-     return state 
- }
-}
-} 
 
-const store = createStore(reducer, applyMiddleware(thunk))
+const store = createStore(reducer, applyMiddleware(thunk));
 
 export default store;
